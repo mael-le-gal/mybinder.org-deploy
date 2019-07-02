@@ -1,0 +1,41 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    run: clean-harbor-registry
+  name: clean-harbor-registry
+spec:
+  schedule: '0 0 * * *'
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            run: clean-harbor-registry
+        spec:
+          restartPolicy: Never
+          containers:
+          - args:
+            - python3
+            - /usr/src/myapp/clean_harbor_registry.py
+            - https://dlqpwel7.gra5.container-registry.ovh.net
+            - binder
+            - "4"
+            - "--dry-run"
+            image: python:3.6-alpine
+            name: clean-harbor-registry
+            resources: {}
+            volumeMounts:
+            - name: docker-push-secret
+              mountPath: "/root/.docker"
+              readOnly: true
+            - name: python-script-configmap
+              mountPath: "/usr/src/myapp"
+          volumes:
+          - name: docker-push-secret
+            secret:
+              secretName: binder-push-secret
+          - name: python-script-configmap
+            configMap:
+              name: script-clean-harbor-registry
