@@ -1,0 +1,33 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    run: healthcheck-launch
+  name: healthcheck-launch
+spec:
+  schedule: '* * * * *'
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      # Number of retry
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            run: healthcheck-launch
+        spec:
+          restartPolicy: Never
+          containers:
+          - args:
+            - python3
+            - /usr/src/myapp/healthcheck.py
+            image: python:3.6-alpine
+            name: healthcheck-launch
+            resources: {}
+            volumeMounts:
+            - name: script-healthcheck
+              mountPath: "/usr/src/myapp"
+          volumes:
+          - name: script-healthcheck
+            configMap:
+              name: script-healthcheck
